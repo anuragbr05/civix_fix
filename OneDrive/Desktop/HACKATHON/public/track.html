@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Track the status of your civic complaint using your complaint ID.">
+    <title>Track Complaint - CivicFix</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <div class="bg-decoration"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="/" class="nav-logo">
+                <div class="nav-logo-icon">🏙️</div>
+                <span>CivicFix</span>
+            </a>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/report.html">Report Issue</a></li>
+                <li><a href="/track.html" class="active">Track Status</a></li>
+                <li><a href="/admin.html">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <div class="container">
+            <h1>🔍 Track Your Complaint</h1>
+            <p>Enter your complaint ID to check the current status and updates of your reported issue.</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="section">
+        <div class="container container-sm">
+            <!-- Search Form -->
+            <div class="card mb-xl">
+                <form id="trackForm" class="flex gap-md" style="flex-wrap: wrap;">
+                    <input type="text" class="form-input" id="complaintId"
+                        placeholder="Enter Complaint ID (e.g., CIV-XXXXXX-XXXX)" required
+                        style="flex: 1; min-width: 200px;">
+                    <button type="submit" class="btn btn-primary" id="searchBtn">
+                        🔍 Search
+                    </button>
+                </form>
+            </div>
+
+            <!-- Alert Container -->
+            <div id="alertContainer"></div>
+
+            <!-- Complaint Details (Hidden by default) -->
+            <div id="complaintDetails" class="hidden">
+                <!-- Status Header -->
+                <div class="card mb-lg" id="statusCard">
+                    <div class="flex items-center justify-between flex-wrap gap-md">
+                        <div>
+                            <p class="text-muted mb-sm">Complaint ID</p>
+                            <h2 id="displayId" style="font-size: 1.5rem;"></h2>
+                        </div>
+                        <div id="statusBadge"></div>
+                    </div>
+                </div>
+
+                <!-- Complaint Info Grid -->
+                <div class="dashboard-grid mb-lg">
+                    <div class="card">
+                        <h3 style="margin-bottom: var(--space-lg);">📋 Issue Details</h3>
+                        <div class="mb-md">
+                            <p class="text-muted" style="font-size: 0.875rem;">Issue Type</p>
+                            <p id="displayType" style="font-weight: 500;"></p>
+                        </div>
+                        <div class="mb-md">
+                            <p class="text-muted" style="font-size: 0.875rem;">Description</p>
+                            <p id="displayDescription"></p>
+                        </div>
+                        <div class="mb-md">
+                            <p class="text-muted" style="font-size: 0.875rem;">Reported On</p>
+                            <p id="displayDate"></p>
+                        </div>
+                        <div>
+                            <p class="text-muted" style="font-size: 0.875rem;">Priority</p>
+                            <p id="displayPriority"></p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-bottom: var(--space-lg);">📍 Location</h3>
+                        <div class="mb-md">
+                            <p class="text-muted" style="font-size: 0.875rem;">Address</p>
+                            <p id="displayAddress"></p>
+                        </div>
+                        <div class="mb-md">
+                            <p class="text-muted" style="font-size: 0.875rem;">Coordinates</p>
+                            <p id="displayCoords"></p>
+                        </div>
+                        <div class="map-container" style="height: 200px; margin-top: var(--space-md);">
+                            <div id="map"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Photo Evidence -->
+                <div class="card mb-lg" id="photoSection">
+                    <h3 style="margin-bottom: var(--space-lg);">📸 Photo Evidence</h3>
+                    <div class="flex gap-lg flex-wrap">
+                        <div id="issuePhotoContainer">
+                            <p class="text-muted mb-sm">Issue Photo</p>
+                            <img id="displayPhoto" src="" alt="Issue photo"
+                                style="max-width: 300px; border-radius: var(--radius-md);">
+                        </div>
+                        <div id="resolutionPhotoContainer" class="hidden">
+                            <p class="text-muted mb-sm">Resolution Photo</p>
+                            <img id="displayResolutionPhoto" src="" alt="Resolution photo"
+                                style="max-width: 300px; border-radius: var(--radius-md);">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Timeline -->
+                <div class="card">
+                    <h3 style="margin-bottom: var(--space-lg);">📊 Status Timeline</h3>
+                    <div class="timeline" id="timeline"></div>
+                </div>
+
+                <!-- Resolution Notes -->
+                <div class="card mt-lg hidden" id="resolutionNotesCard">
+                    <h3 style="margin-bottom: var(--space-lg);">📝 Resolution Notes</h3>
+                    <p id="displayResolutionNotes"></p>
+                </div>
+            </div>
+
+            <!-- No Results Message -->
+            <div id="noResults" class="hidden text-center" style="padding: var(--space-3xl);">
+                <div style="font-size: 4rem; margin-bottom: var(--space-lg);">🔍</div>
+                <h2>No Complaint Found</h2>
+                <p class="text-muted mb-xl">The complaint ID you entered doesn't exist in our system.</p>
+                <a href="/report.html" class="btn btn-primary">📍 Report New Issue</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-text">
+                <strong>CivicFix</strong> - Making cities better, one report at a time
+            </div>
+            <div class="footer-text">
+                Need help? <a href="#">Contact Support</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+    <script>
+        // Mobile Navigation
+        document.getElementById('navToggle').addEventListener('click', function () {
+            document.getElementById('navLinks').classList.toggle('active');
+        });
+
+        let map = null;
+
+        // Issue type labels
+        const issueTypeLabels = {
+            'pothole': '🕳️ Pothole / Road Damage',
+            'garbage': '🗑️ Garbage / Waste',
+            'streetlight': '💡 Streetlight Issue',
+            'water-leakage': '💧 Water Leakage / Drainage',
+            'dirty-toilet': '🚽 Public Toilet Issue',
+            'other': '📋 Other'
+        };
+
+        // Status info
+        const statusInfo = {
+            'pending': { label: 'Pending', class: 'badge-pending', icon: '⏳' },
+            'in-progress': { label: 'In Progress', class: 'badge-in-progress', icon: '🔄' },
+            'resolved': { label: 'Resolved', class: 'badge-resolved', icon: '✅' },
+            'rejected': { label: 'Rejected', class: 'badge-rejected', icon: '❌' }
+        };
+
+        // Priority labels
+        const priorityLabels = {
+            'low': '🟢 Low',
+            'medium': '🟡 Medium',
+            'high': '🟠 High',
+            'critical': '🔴 Critical'
+        };
+
+        // Track Form Submission
+        const trackForm = document.getElementById('trackForm');
+        const searchBtn = document.getElementById('searchBtn');
+        const alertContainer = document.getElementById('alertContainer');
+        const complaintDetails = document.getElementById('complaintDetails');
+        const noResults = document.getElementById('noResults');
+
+        trackForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const complaintId = document.getElementById('complaintId').value.trim();
+            if (!complaintId) return;
+
+            searchBtn.disabled = true;
+            searchBtn.innerHTML = '<span class="spinner"></span> Searching...';
+            alertContainer.innerHTML = '';
+            complaintDetails.classList.add('hidden');
+            noResults.classList.add('hidden');
+
+            try {
+                const response = await fetch(`/api/complaints/${encodeURIComponent(complaintId)}`);
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    displayComplaint(result.data);
+                } else {
+                    noResults.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                alertContainer.innerHTML = '<div class="alert alert-error">Failed to search. Please try again.</div>';
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.innerHTML = '🔍 Search';
+            }
+        });
+
+        function displayComplaint(data) {
+            // Basic info
+            document.getElementById('displayId').textContent = data.complaintId;
+            document.getElementById('displayType').textContent = issueTypeLabels[data.issueType] || data.issueType;
+            document.getElementById('displayDescription').textContent = data.description;
+            document.getElementById('displayDate').textContent = new Date(data.createdAt).toLocaleString();
+            document.getElementById('displayPriority').textContent = priorityLabels[data.priority] || data.priority;
+
+            // Status badge
+            const status = statusInfo[data.status] || { label: data.status, class: '', icon: '' };
+            document.getElementById('statusBadge').innerHTML =
+                `<span class="badge ${status.class}" style="font-size: 1rem; padding: 0.5rem 1rem;">
+          ${status.icon} ${status.label}
+        </span>`;
+
+            // Location
+            document.getElementById('displayAddress').textContent = data.location.address || 'Not available';
+            document.getElementById('displayCoords').textContent =
+                `${data.location.latitude.toFixed(6)}, ${data.location.longitude.toFixed(6)}`;
+
+            // Initialize map
+            setTimeout(() => {
+                if (map) map.remove();
+                map = L.map('map').setView([data.location.latitude, data.location.longitude], 16);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                L.marker([data.location.latitude, data.location.longitude])
+                    .addTo(map)
+                    .bindPopup(issueTypeLabels[data.issueType] || data.issueType)
+                    .openPopup();
+            }, 100);
+
+            // Photos
+            if (data.photo) {
+                document.getElementById('displayPhoto').src = data.photo;
+                document.getElementById('issuePhotoContainer').classList.remove('hidden');
+            } else {
+                document.getElementById('issuePhotoContainer').classList.add('hidden');
+            }
+
+            if (data.resolutionPhoto) {
+                document.getElementById('displayResolutionPhoto').src = data.resolutionPhoto;
+                document.getElementById('resolutionPhotoContainer').classList.remove('hidden');
+            } else {
+                document.getElementById('resolutionPhotoContainer').classList.add('hidden');
+            }
+
+            // Resolution notes
+            if (data.resolutionNotes) {
+                document.getElementById('displayResolutionNotes').textContent = data.resolutionNotes;
+                document.getElementById('resolutionNotesCard').classList.remove('hidden');
+            } else {
+                document.getElementById('resolutionNotesCard').classList.add('hidden');
+            }
+
+            // Timeline
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = generateTimeline(data);
+
+            // Show details
+            complaintDetails.classList.remove('hidden');
+            complaintDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function generateTimeline(data) {
+            const steps = [
+                { status: 'pending', label: 'Complaint Registered', date: data.createdAt },
+                { status: 'in-progress', label: 'Being Processed', date: data.status === 'in-progress' || data.status === 'resolved' ? data.updatedAt : null },
+                { status: 'resolved', label: 'Issue Resolved', date: data.status === 'resolved' ? data.updatedAt : null }
+            ];
+
+            const currentIndex = ['pending', 'in-progress', 'resolved'].indexOf(data.status);
+            if (data.status === 'rejected') {
+                steps[1] = { status: 'rejected', label: 'Complaint Rejected', date: data.updatedAt };
+                steps.pop();
+            }
+
+            return steps.map((step, index) => {
+                const isCompleted = index <= currentIndex;
+                const stepDate = step.date ? new Date(step.date).toLocaleString() : 'Pending';
+
+                return `
+          <div class="timeline-item ${isCompleted ? 'completed' : ''}">
+            <p class="timeline-date">${stepDate}</p>
+            <p style="font-weight: 500;">${step.label}</p>
+          </div>
+        `;
+            }).join('');
+        }
+
+        // Check URL for complaint ID
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlComplaintId = urlParams.get('id');
+        if (urlComplaintId) {
+            document.getElementById('complaintId').value = urlComplaintId;
+            trackForm.dispatchEvent(new Event('submit'));
+        }
+    </script>
+</body>
+
+</html>

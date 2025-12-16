@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Admin dashboard for managing civic complaints and monitoring city issues.">
+    <title>Admin Dashboard - CivicFix</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
+    <style>
+        .admin-locked {
+            display: block;
+        }
+
+        .admin-unlocked {
+            display: none;
+        }
+
+        .admin-unlocked.show {
+            display: block;
+        }
+
+        .admin-locked.hide {
+            display: none;
+        }
+
+        .complaint-row {
+            cursor: pointer;
+        }
+
+        .complaint-row:hover {
+            background: rgba(99, 102, 241, 0.1) !important;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: var(--space-md);
+            flex-wrap: wrap;
+            margin-bottom: var(--space-lg);
+        }
+
+        .filter-bar select {
+            padding: var(--space-sm) var(--space-md);
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+        }
+
+        .refresh-btn {
+            margin-left: auto;
+        }
+
+        .marker-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .leaflet-popup-content {
+            color: #1a1a2e;
+        }
+
+        .popup-content {
+            min-width: 200px;
+        }
+
+        .popup-content h4 {
+            margin: 0 0 8px 0;
+            color: #1a1a2e;
+        }
+
+        .popup-content p {
+            margin: 4px 0;
+            font-size: 0.875rem;
+            color: #4a4a6a;
+        }
+
+        .popup-link {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 12px;
+            background: #6366f1;
+            color: white !important;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-decoration"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="/" class="nav-logo">
+                <div class="nav-logo-icon">🏙️</div>
+                <span>CivicFix</span>
+            </a>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/report.html">Report Issue</a></li>
+                <li><a href="/track.html">Track Status</a></li>
+                <li><a href="/admin.html" class="active">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Login Screen -->
+    <div class="admin-locked" id="loginScreen">
+        <div class="login-container">
+            <div class="card login-card">
+                <div class="text-center mb-xl">
+                    <div style="font-size: 4rem; margin-bottom: var(--space-md);">🔐</div>
+                    <h2>Admin Login</h2>
+                    <p class="text-muted">Enter your credentials to access the dashboard</p>
+                </div>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label" for="username">Username</label>
+                        <input type="text" class="form-input" id="username" placeholder="Enter username" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password</label>
+                        <input type="password" class="form-input" id="password" placeholder="Enter password" required>
+                    </div>
+                    <div id="loginError" class="alert alert-error hidden mb-lg"></div>
+                    <button type="submit" class="btn btn-primary w-full">🔓 Login</button>
+                </form>
+
+                <p class="text-center text-muted mt-lg" style="font-size: 0.875rem;">
+                    Demo credentials: admin / admin123
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div class="admin-unlocked" id="dashboardScreen">
+        <!-- Page Header -->
+        <header class="page-header" style="padding-bottom: var(--space-lg);">
+            <div class="container">
+                <div class="flex items-center justify-between flex-wrap gap-md">
+                    <div>
+                        <h1>📊 Admin Dashboard</h1>
+                        <p>Monitor and manage civic complaints across the city</p>
+                    </div>
+                    <div class="container" style="padding-top: 100px;">
+                        <!-- Header -->
+                        <div class="hero-text" style="text-align: center; margin-bottom: 2rem;">
+                            <h1>Admin <span class="gradient-text">Dashboard</span></h1>
+                            <p>Monitor and manage reported civic issues everywhere</p>
+                        </div>
+
+                        <!-- Filter Bar -->
+                        <div class="filter-bar" style="margin-bottom: 0;">
+                            <!-- Hidden original selects -->
+                            <div class="custom-select-wrapper">
+                                <select id="filterDept" style="display: none;">
+                                    <option value="">All Departments</option>
+                                    <option value="Roads & Highway">Roads & Highway</option>
+                                    <option value="Sanitation">Sanitation</option>
+                                    <option value="Energy & Power">Energy & Power</option>
+                                    <option value="Water Supply">Water Supply</option>
+                                    <option value="Health & Hygiene">Health & Hygiene</option>
+                                    <option value="General Admin">General Admin</option>
+                                </select>
+                            </div>
+
+                            <div class="custom-select-wrapper">
+                                <select id="filterStatus" style="display: none;">
+                                    <option value="">All Statuses</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Resolved">Resolved</option>
+                                    <option value="Rejected">Rejected</option>
+                                </select>
+                            </div>
+
+                            <div class="custom-select-wrapper">
+                                <select id="filterType" style="display: none;">
+                                    <option value="">All Types</option>
+                                    <option value="Pothole">Pothole</option>
+                                    <option value="Garbage">Garbage</option>
+                                    <option value="Streetlight">Streetlight</option>
+                                    <option value="Water Leakage">Water Leakage</option>
+                                    <option value="Public Toilet">Public Toilet</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <input type="text" id="filterDate" class="form-input" placeholder="Select Date"
+                                style="max-width: 200px;">
+
+                            <button class="btn btn-secondary btn-sm refresh-btn" id="refreshBtn">🔄 Refresh</button>
+                        </div>
+
+                        <!-- Dashboard Grid -->
+                        <div class="dashboard-grid">
+                            <!-- Complaint List -->
+                            <div class="card" style="margin-top: 1rem;">
+                                <div class="card-header">
+                                    <div class="card-icon">📋</div>
+                                    <div class="card-title">Recent Complaints</div>
+                                </div>
+                                <div class="table-container">
+                                    <table id="complaintsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Department</th>
+                                                <th>Type</th>
+                                                <th>Location</th>
+                                                <th>Status</th>
+                                                <th>Priority</th>
+                                                <th>Date</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Map View -->
+                            <div class="card" style="margin-top: 1rem;">
+                                <div class="card-header">
+                                    <div class="card-icon">🗺️</div>
+                                    <div class="card-title">Issue Map</div>
+                                </div>
+                                <div id="adminMap"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Login Modal -->
+                    <div class="modal" id="loginModal">
+                        <div class="modal-content" style="max-width: 400px; text-align: center;">
+                            <div class="card-icon" style="margin: 0 auto 1rem;">🔒</div>
+                            <h2>Admin Login</h2>
+                            <p style="margin-bottom: 1.5rem;">Please sign in to continue</p>
+                            <form id="loginForm" onsubmit="handleLogin(event)">
+                                <div class="form-group">
+                                    <input type="text" id="adminUser" class="form-input" placeholder="Username"
+                                        required>
+                                </div>
+                                <div class="form-group">
+                                    <input type="password" id="adminPass" class="form-input" placeholder="Password"
+                                        required>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="width: 100%;">Login to
+                                    Dashboard</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Update Status Modal -->
+                    <div class="modal" id="updateModal">
+                        <div class="modal-content">
+                            <span class="close-modal" onclick="closeUpdateModal()">×</span>
+                            <h2>Update Status</h2>
+                            <form id="updateForm" onsubmit="handleUpdate(event)">
+                                <input type="hidden" id="updateId">
+                                <div class="form-group">
+                                    <label class="form-label">New Status</label>
+                                    <select id="updateStatus" class="form-select" required>
+                                        <option value="Pending">Pending</option>
+                                        <option value="In Progress">In Progress</option>
+                                        <option value="Resolved">Resolved</option>
+                                        <option value="Rejected">Rejected</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Admin Remarks</label>
+                                    <textarea id="updateRemarks" class="form-textarea"
+                                        placeholder="Add notes about the action taken..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="width: 100%;">Update
+                                    Complaint</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- View Details Modal -->
+                    <div class="modal-overlay" id="viewModal">
+                        <div class="modal" style="max-width: 600px;">
+                            <div class="modal-header">
+                                <h2>Complaint Details</h2>
+                                <button class="modal-close" id="closeViewModal">&times;</button>
+                            </div>
+                            <div id="viewModalContent"></div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <footer class="footer">
+                        <div class="container footer-content">
+                            <div class="footer-text">
+                                <strong>CivicFix Admin</strong> - Manage city complaints efficiently
+                            </div>
+                            <div class="footer-text">
+                                Last updated: <span id="lastUpdated">-</span>
+                            </div>
+                        </div>
+                    </footer>
+
+                    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+                    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+                    <script>
+
+                        const priorityLabels = {
+                            'low': '🟢 Low',
+                            'medium': '🟡 Medium',
+                            'high': '🟠 High',
+                            'critical': '🔴 Critical'
+                        };
+
+                        const ADMIN_USER = 'admin';
+                        const ADMIN_PASS = 'admin123';
+
+                        // State
+                        let isLoggedIn = false;
+                        let adminMap = null;
+                        let complaints = [];
+                        let markers = [];
+
+                        // DOM Elements
+                        const loginScreen = document.getElementById('loginScreen');
+                        const dashboardScreen = document.getElementById('dashboardScreen');
+                        const loginForm = document.getElementById('loginForm');
+                        const loginError = document.getElementById('loginError');
+                        const logoutBtn = document.getElementById('logoutBtn');
+                        const updateModal = document.getElementById('updateModal');
+                        const viewModal = document.getElementById('viewModal');
+
+                        // Check if already logged in
+                        if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+                            showDashboard();
+                        }
+
+                        // Login Handler
+                        loginForm.addEventListener('submit', function (e) {
+                            e.preventDefault();
+                            const username = document.getElementById('username').value;
+                            const password = document.getElementById('password').value;
+
+                            if (username === ADMIN_USER && password === ADMIN_PASS) {
+                                sessionStorage.setItem('adminLoggedIn', 'true');
+                                showDashboard();
+                            } else {
+                                loginError.textContent = 'Invalid credentials. Try admin / admin123';
+                                loginError.classList.remove('hidden');
+                            }
+                        });
+
+                        // Logout Handler
+                        logoutBtn.addEventListener('click', function () {
+                            sessionStorage.removeItem('adminLoggedIn');
+                            location.reload();
+                        });
+
+                        function showDashboard() {
+                            loginScreen.classList.add('hide');
+                            dashboardScreen.classList.add('show');
+                            isLoggedIn = true;
+                            initMap();
+                            loadData();
+                            // Initialize custom dropdowns after dashboard is visible
+                            setTimeout(initCustomDropdowns, 100);
+                        }
+
+                        // Initialize Map
+                        function initMap() {
+                            if (adminMap) return;
+
+                            // Initialize Flatpickr
+                            flatpickr("#filterDate", {
+                                dateFormat: "Y-m-d",
+                                altInput: true,
+                                altFormat: "F j, Y",
+                                theme: "dark",
+                                allowInput: true,
+                                onChange: function (selectedDates, dateStr, instance) {
+                                    // Update the real query param manually if needed or just reload
+                                    // loadData reads from the HIDDEN input value (Y-m-d) which is #filterDate
+                                    // altInput creates a text input compliant with the altFormat
+                                    loadData();
+                                }
+                            });
+
+                            // Wait for container to be visible, then init map
+                            setTimeout(() => {
+                                // Default to India center
+                                adminMap = L.map('adminMap').setView([20.5937, 78.9629], 5);
+                                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                    attribution: '© OpenStreetMap contributors'
+                                }).addTo(adminMap);
+
+                                // Force map to recalculate size after container is visible
+                                setTimeout(() => {
+                                    adminMap.invalidateSize();
+                                }, 100);
+                            }, 200);
+                        }
+
+                        // Load Data
+                        async function loadData() {
+                            try {
+                                // Get current filters
+                                const dateFilter = document.getElementById('filterDate').value;
+                                let query = '/api/complaints?limit=100'; // Default limit
+
+                                if (dateFilter) {
+                                    query += `&date=${dateFilter}`;
+                                }
+
+                                const [complaintsRes, statsRes] = await Promise.all([
+                                    fetch(query),
+                                    fetch('/api/complaints/stats')
+                                ]);
+
+                                const complaintsData = await complaintsRes.json();
+                                const statsData = await statsRes.json();
+
+                                if (complaintsData.success) {
+                                    complaints = complaintsData.data;
+                                    renderTable();
+                                    updateMap();
+                                }
+
+                                if (statsData.success) {
+                                    updateStats(statsData.data);
+                                    renderTypeBreakdown(statsData.data.byType);
+                                }
+
+                                document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+                            } catch (error) {
+                                console.error('Failed to load data:', error);
+                            }
+                        }
+
+                        // Update Stats
+                        function updateStats(stats) {
+                            document.getElementById('statTotal').textContent = stats.total || 0;
+                            document.getElementById('statPending').textContent = stats.pending || 0;
+                            document.getElementById('statInProgress').textContent = stats.inProgress || 0;
+                            document.getElementById('statResolved').textContent = stats.resolved || 0;
+                        }
+
+                        // Render Type Breakdown
+                        function renderTypeBreakdown(byType) {
+                            const container = document.getElementById('typeBreakdown');
+                            if (!byType || Object.keys(byType).length === 0) {
+                                container.innerHTML = '<p class="text-muted">No data available</p>';
+                                return;
+                            }
+
+                            const total = Object.values(byType).reduce((a, b) => a + b, 0);
+
+                            container.innerHTML = Object.entries(byType).map(([type, count]) => {
+                                const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+                                return `
+          <div class="flex items-center justify-between mb-md" style="padding: var(--space-sm) 0;">
+            <div class="flex items-center gap-sm">
+              <span>${issueTypeIcons[type] || '📋'}</span>
+              <span>${issueTypeLabels[type] || type}</span>
+            </div>
+            <div class="flex items-center gap-md">
+              <div style="width: 100px; height: 8px; background: var(--bg-glass); border-radius: 4px; overflow: hidden;">
+                <div style="width: ${percentage}%; height: 100%; background: var(--gradient-primary);"></div>
+              </div>
+              <span class="text-muted" style="min-width: 40px;">${count}</span>
+            </div>
+          </div>
+        `;
+                            }).join('');
+                        }
+
+                        // Render Table
+                        function renderTable() {
+                            const tbody = document.getElementById('complaintsTable');
+                            const statusFilter = document.getElementById('filterStatus').value;
+                            const typeFilter = document.getElementById('filterType').value;
+                            const deptFilter = document.getElementById('filterDept').value;
+
+                            let filtered = complaints;
+                            if (statusFilter) filtered = filtered.filter(c => c.status === statusFilter);
+                            if (typeFilter) filtered = filtered.filter(c => c.issueType === typeFilter);
+                            if (deptFilter) filtered = filtered.filter(c => (c.department || 'General Administration') === deptFilter);
+
+                            if (filtered.length === 0) {
+                                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No complaints found</td></tr>';
+                                return;
+                            }
+
+                            tbody.innerHTML = filtered.map(c => `
+        <tr class="complaint-row" data-id="${c.complaintId}">
+          <td><code style="color: var(--primary-light);">${c.complaintId}</code></td>
+          <td>${issueTypeLabels[c.issueType] || c.issueType}</td>
+          <td><span class="badge" style="background:rgba(255,255,255,0.1); color:var(--text-primary); font-size:0.75rem;">${c.department || 'Unassigned'}</span></td>
+          <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            ${c.description}
+          </td>
+          <td>${statusBadges[c.status] || c.status}</td>
+          <td>${priorityLabels[c.priority] || c.priority}</td>
+          <td>${new Date(c.createdAt).toLocaleDateString()}</td>
+          <td>
+            <div class="flex gap-sm">
+              <button class="btn btn-sm btn-secondary view-btn" data-id="${c.complaintId}">👁️</button>
+              <button class="btn btn-sm btn-primary edit-btn" data-id="${c.complaintId}">✏️</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+                            // Add event listeners
+                            document.querySelectorAll('.view-btn').forEach(btn => {
+                                btn.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    showViewModal(btn.dataset.id);
+                                });
+                            });
+
+                            document.querySelectorAll('.edit-btn').forEach(btn => {
+                                btn.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    showUpdateModal(btn.dataset.id);
+                                });
+                            });
+                        }
+
+                        // Update Map Markers
+                        function updateMap() {
+                            // Wait for map to be ready
+                            if (!adminMap) {
+                                setTimeout(updateMap, 500);
+                                return;
+                            }
+
+                            // Clear existing markers
+                            markers.forEach(m => adminMap.removeLayer(m));
+                            markers = [];
+
+                            if (complaints.length === 0) return;
+
+                            const bounds = [];
+
+                            complaints.forEach(c => {
+                                if (!c.location || !c.location.latitude || !c.location.longitude) return;
+
+                                const lat = c.location.latitude;
+                                const lng = c.location.longitude;
+                                bounds.push([lat, lng]);
+
+                                // Create custom icon
+                                const icon = L.divIcon({
+                                    className: 'marker-icon',
+                                    html: `<div style="
+            background: ${c.status === 'resolved' ? '#10b981' : c.status === 'in-progress' ? '#3b82f6' : '#f59e0b'};
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-size: 16px;
+          ">${issueTypeIcons[c.issueType] || '📋'}</div>`,
+                                    iconSize: [32, 32],
+                                    iconAnchor: [16, 16]
+                                });
+
+                                const marker = L.marker([lat, lng], { icon })
+                                    .addTo(adminMap)
+                                    .bindPopup(`
+            <div class="popup-content">
+              <h4>${issueTypeLabels[c.issueType] || c.issueType}</h4>
+              <p><strong>ID:</strong> ${c.complaintId}</p>
+              <p><strong>Status:</strong> ${c.status}</p>
+              <p>${c.description.substring(0, 100)}${c.description.length > 100 ? '...' : ''}</p>
+              <a href="/track.html?id=${c.complaintId}" class="popup-link">View Details →</a>
+            </div>
+          `);
+
+                                markers.push(marker);
+                            });
+
+                            // Fit map to bounds
+                            if (bounds.length > 0) {
+                                adminMap.fitBounds(bounds, { padding: [50, 50] });
+                            }
+                        }
+
+                        // Show Update Modal
+                        function showUpdateModal(complaintId) {
+                            const complaint = complaints.find(c => c.complaintId === complaintId);
+                            if (!complaint) return;
+
+                            document.getElementById('updateComplaintId').value = complaint.complaintId;
+                            document.getElementById('displayUpdateId').value = complaint.complaintId;
+                            document.getElementById('updateStatus').value = complaint.status;
+                            document.getElementById('updatePriority').value = complaint.priority;
+                            document.getElementById('updateAssignedTo').value = complaint.assignedTo || '';
+                            document.getElementById('updateNotes').value = complaint.resolutionNotes || '';
+
+                            updateModal.classList.add('active');
+                        }
+
+                        // Show View Modal
+                        function showViewModal(complaintId) {
+                            const c = complaints.find(comp => comp.complaintId === complaintId);
+                            if (!c) return;
+
+                            const content = document.getElementById('viewModalContent');
+                            content.innerHTML = `
+        <div class="mb-lg">
+          <div class="flex items-center justify-between mb-md">
+            <code style="font-size: 1.25rem; color: var(--primary-light);">${c.complaintId}</code>
+            ${statusBadges[c.status]}
+          </div>
+        </div>
+        
+        <div class="mb-lg">
+          <p class="text-muted mb-sm">Issue Type</p>
+          <p style="font-weight: 500;">${issueTypeLabels[c.issueType] || c.issueType}</p>
+        </div>
+        
+        <div class="mb-lg">
+          <p class="text-muted mb-sm">Description</p>
+          <p>${c.description}</p>
+        </div>
+        
+        <div class="mb-lg">
+          <p class="text-muted mb-sm">Location</p>
+          <p>${c.location?.address || `${c.location?.latitude}, ${c.location?.longitude}`}</p>
+        </div>
+        
+        <div class="flex gap-lg mb-lg">
+          <div>
+            <p class="text-muted mb-sm">Priority</p>
+            <p>${priorityLabels[c.priority]}</p>
+          </div>
+          <div>
+            <p class="text-muted mb-sm">Reported</p>
+            <p>${new Date(c.createdAt).toLocaleString()}</p>
+          </div>
+        </div>
+        
+        ${c.photo ? `
+          <div class="mb-lg">
+            <p class="text-muted mb-sm">Photo Evidence</p>
+            <img src="${c.photo}" alt="Issue photo" style="max-width: 100%; border-radius: var(--radius-md);">
+          </div>
+        ` : ''}
+        
+        ${c.citizenName && c.citizenName !== 'Anonymous' ? `
+          <div class="mb-lg">
+            <p class="text-muted mb-sm">Reported By</p>
+            <p>${c.citizenName}</p>
+            ${c.citizenPhone ? `<p class="text-muted">${c.citizenPhone}</p>` : ''}
+            ${c.citizenEmail ? `<p class="text-muted">${c.citizenEmail}</p>` : ''}
+          </div>
+        ` : ''}
+        
+        <div class="flex gap-md mt-xl">
+          <button class="btn btn-primary flex-1 edit-from-view" data-id="${c.complaintId}">✏️ Edit Status</button>
+          <a href="/track.html?id=${c.complaintId}" class="btn btn-secondary">🔍 Track Page</a>
+        </div>
+      `;
+
+                            content.querySelector('.edit-from-view').addEventListener('click', function () {
+                                viewModal.classList.remove('active');
+                                showUpdateModal(this.dataset.id);
+                            });
+
+                            viewModal.classList.add('active');
+                        }
+
+                        // Update Form Submission
+                        document.getElementById('updateForm').addEventListener('submit', async function (e) {
+                            e.preventDefault();
+
+                            const complaintId = document.getElementById('updateComplaintId').value;
+                            const data = {
+                                status: document.getElementById('updateStatus').value,
+                                priority: document.getElementById('updatePriority').value,
+                                assignedTo: document.getElementById('updateAssignedTo').value,
+                                resolutionNotes: document.getElementById('updateNotes').value
+                            };
+
+                            try {
+                                const response = await fetch(`/api/complaints/${encodeURIComponent(complaintId)}`, {
+                                    method: 'PATCH',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(data)
+                                });
+
+                                const result = await response.json();
+                                if (result.success) {
+                                    updateModal.classList.remove('active');
+                                    loadData(); // Refresh data
+                                } else {
+                                    alert('Failed to update: ' + result.message);
+                                }
+                            } catch (error) {
+                                console.error('Update error:', error);
+                                alert('Failed to update complaint');
+                            }
+                        });
+
+                        // Filter Handlers
+                        document.getElementById('filterStatus').addEventListener('change', renderTable);
+                        document.getElementById('filterType').addEventListener('change', renderTable);
+                        // Note: Date change is handled by flatpickr onChange
+                        document.getElementById('refreshBtn').addEventListener('click', loadData);
+
+                        // Modal Close Handlers
+                        document.getElementById('closeUpdateModal').addEventListener('click', () => updateModal.classList.remove('active'));
+                        document.getElementById('cancelUpdate').addEventListener('click', () => updateModal.classList.remove('active'));
+                        document.getElementById('closeViewModal').addEventListener('click', () => viewModal.classList.remove('active'));
+
+                        updateModal.addEventListener('click', (e) => {
+                            if (e.target === updateModal) updateModal.classList.remove('active');
+                        });
+
+                        viewModal.addEventListener('click', (e) => {
+                            if (e.target === viewModal) viewModal.classList.remove('active');
+                        });
+
+                        // Auto refresh every 30 seconds
+                        setInterval(() => {
+                            if (isLoggedIn) loadData();
+                        }, 30000);
+
+                        // Custom Dropdown Logic
+                        function initCustomDropdowns() {
+                            const selects = document.querySelectorAll('.custom-select-wrapper select');
+
+                            selects.forEach(select => {
+                                // If already initialized, skip
+                                if (select.parentNode.querySelector('.custom-select')) return;
+
+                                // Create custom structure
+                                const customSelect = document.createElement('div');
+                                customSelect.className = 'custom-select';
+
+                                const trigger = document.createElement('div');
+                                trigger.className = 'custom-select__trigger';
+                                trigger.innerHTML = `<span>${select.options[select.selectedIndex].text}</span> <div class="arrow"></div>`;
+
+                                const options = document.createElement('div');
+                                options.className = 'custom-options';
+
+                                Array.from(select.options).forEach(option => {
+                                    const customOption = document.createElement('div');
+                                    customOption.className = 'custom-option';
+                                    if (option.selected) customOption.classList.add('selected');
+                                    customOption.textContent = option.text;
+                                    customOption.dataset.value = option.value;
+
+                                    customOption.addEventListener('click', function () {
+                                        // Update UI
+                                        trigger.querySelector('span').textContent = this.textContent;
+                                        customSelect.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
+                                        this.classList.add('selected');
+
+                                        // Sync with original select
+                                        select.value = this.dataset.value;
+
+                                        // Dispatch change event
+                                        const event = new Event('change');
+                                        select.dispatchEvent(event);
+
+                                        // Close dropdown
+                                        customSelect.classList.remove('open');
+                                    });
+
+                                    options.appendChild(customOption);
+                                });
+
+                                customSelect.appendChild(trigger);
+                                customSelect.appendChild(options);
+
+                                select.parentNode.appendChild(customSelect);
+
+                                // Toggle open
+                                trigger.addEventListener('click', function (e) {
+                                    // Close others
+                                    document.querySelectorAll('.custom-select').forEach(s => {
+                                        if (s !== customSelect) s.classList.remove('open');
+                                    });
+                                    customSelect.classList.toggle('open');
+                                    e.stopPropagation();
+                                });
+                            });
+
+                            // Close on click outside
+                            window.addEventListener('click', function (e) {
+                                if (!e.target.closest('.custom-select')) {
+                                    document.querySelectorAll('.custom-select').forEach(s => s.classList.remove('open'));
+                                }
+                            });
+
+                            // Attach LoadData listener to original selects
+                            // (Already attached via HTML onchange or JS, but ensuring here doesn't hurt)
+                            // selects.forEach(s => s.addEventListener('change', loadData));
+                        }
+
+                        // Handle Login Function (to match onsubmit="handleLogin(event)" if it exists)
+                        function handleLogin(e) {
+                            e.preventDefault();
+                            // Use the logic from the event listener
+                            // Since we have duplicate IDs, we try to grab values from the active form
+                            // But easiest is to just use the hardcoded check
+                            // For safety, let's grab the inputs relative to the event target
+                            const form = e.target;
+                            const userInput = form.querySelector('input[type="text"]');
+                            const passInput = form.querySelector('input[type="password"]');
+
+                            const username = userInput ? userInput.value : document.getElementById('username')?.value || document.getElementById('adminUser')?.value;
+                            const password = passInput ? passInput.value : document.getElementById('password')?.value || document.getElementById('adminPass')?.value;
+
+                            if ((username === 'admin' && password === 'admin123') || (username === ADMIN_USER && password === ADMIN_PASS)) {
+                                sessionStorage.setItem('adminLoggedIn', 'true');
+                                showDashboard();
+                            } else {
+                                alert('Invalid credentials');
+                            }
+                        }
+                    </script>
+</body>
+
+</html>

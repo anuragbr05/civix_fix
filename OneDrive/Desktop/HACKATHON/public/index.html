@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Report and track civic issues in your city. Get faster resolution for potholes, garbage, streetlights, and more.">
+  <title>CivicFix - Report & Track Civic Issues</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <!-- Background Decoration -->
+  <div class="bg-decoration"></div>
+  
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container nav-content">
+      <a href="/" class="nav-logo">
+        <div class="nav-logo-icon">🏙️</div>
+        <span>CivicFix</span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/" class="active">Home</a></li>
+        <li><a href="/report.html">Report Issue</a></li>
+        <li><a href="/track.html">Track Status</a></li>
+        <li><a href="/admin.html">Admin</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container hero-content">
+      <div class="hero-text">
+        <h1>Report Civic Issues <br><span class="gradient-text">Get Faster Resolution</span></h1>
+        <p>A digital platform where citizens can report civic issues using photos and live GPS location. Authorities monitor, assign, and resolve issues using a real-time map and dashboard.</p>
+        <div class="hero-buttons">
+          <a href="/report.html" class="btn btn-primary btn-lg">
+            📍 Report an Issue
+          </a>
+          <a href="/track.html" class="btn btn-secondary btn-lg">
+            🔍 Track Complaint
+          </a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-card">
+          <div class="stats-grid" style="min-width: 280px;">
+            <div class="stat-card" style="padding: 1.25rem;">
+              <div class="stat-value" id="heroTotalComplaints">--</div>
+              <div class="stat-label">Total Reports</div>
+            </div>
+            <div class="stat-card" style="padding: 1.25rem;">
+              <div class="stat-value" id="heroResolvedCount">--</div>
+              <div class="stat-label">Resolved</div>
+            </div>
+            <div class="stat-card" style="padding: 1.25rem;">
+              <div class="stat-value" id="heroPendingCount">--</div>
+              <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card" style="padding: 1.25rem;">
+              <div class="stat-value" id="heroInProgressCount">--</div>
+              <div class="stat-label">In Progress</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="section">
+    <div class="container container-sm">
+      <div class="section-title">
+        <h2>How It Works</h2>
+        <p>Simple 4-step process to report and resolve civic issues</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>Report the Issue</h3>
+            <p>Take a photo, let us capture your GPS location, and describe the problem. It takes less than a minute!</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3>Complaint Registered</h3>
+            <p>Your complaint is instantly logged in our system with a unique tracking ID. No complaint gets lost.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3>Authority Action</h3>
+            <p>City authorities see your report on their dashboard, assign it to the right department, and dispatch field workers.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h3>Issue Resolved</h3>
+            <p>Field workers fix the issue and upload proof. You can track the status in real-time until resolution.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Issue Types Section -->
+  <section class="section" style="background: var(--bg-darker);">
+    <div class="container">
+      <div class="section-title">
+        <h2>What You Can Report</h2>
+        <p>Common civic issues that we help resolve quickly</p>
+      </div>
+      <div class="features-grid">
+        <div class="card">
+          <div class="card-header">
+            <div class="issue-icon pothole">🕳️</div>
+            <h3 class="card-title">Potholes</h3>
+          </div>
+          <p>Report damaged roads, potholes, and unsafe driving conditions in your area.</p>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="issue-icon garbage">🗑️</div>
+            <h3 class="card-title">Garbage</h3>
+          </div>
+          <p>Report uncollected garbage, overflowing bins, or illegal dumping sites.</p>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="issue-icon streetlight">💡</div>
+            <h3 class="card-title">Streetlights</h3>
+          </div>
+          <p>Report broken, flickering, or non-functional street lights in your neighborhood.</p>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="issue-icon water-leakage">💧</div>
+            <h3 class="card-title">Water Leakage</h3>
+          </div>
+          <p>Report water pipeline leaks, drainage issues, or waterlogging problems.</p>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="issue-icon dirty-toilet">🚽</div>
+            <h3 class="card-title">Public Toilets</h3>
+          </div>
+          <p>Report unhygienic, damaged, or non-functional public toilet facilities.</p>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="issue-icon other">📋</div>
+            <h3 class="card-title">Other Issues</h3>
+          </div>
+          <p>Report any other civic problems not covered above. We're here to help!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="section">
+    <div class="container text-center">
+      <h2>Ready to Report an Issue?</h2>
+      <p style="max-width: 500px; margin: 1rem auto 2rem;">
+        Help make your city better. Report civic issues and track their resolution in real-time.
+      </p>
+      <div class="flex justify-center gap-md flex-wrap">
+        <a href="/report.html" class="btn btn-primary btn-lg">📍 Report Now</a>
+        <a href="/track.html" class="btn btn-secondary btn-lg">🔍 Track Existing</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-content">
+      <div class="footer-text">
+        <strong>CivicFix</strong> - Unified Civic Issue Detection & Grievance Redressal Platform
+      </div>
+      <div class="footer-text">
+        Built with ❤️ for better cities
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile Navigation Toggle
+    document.getElementById('navToggle').addEventListener('click', function() {
+      document.getElementById('navLinks').classList.toggle('active');
+    });
+
+    // Fetch and display stats
+    async function loadStats() {
+      try {
+        const response = await fetch('/api/complaints/stats');
+        const result = await response.json();
+        
+        if (result.success) {
+          document.getElementById('heroTotalComplaints').textContent = result.data.total || 0;
+          document.getElementById('heroResolvedCount').textContent = result.data.resolved || 0;
+          document.getElementById('heroPendingCount').textContent = result.data.pending || 0;
+          document.getElementById('heroInProgressCount').textContent = result.data.inProgress || 0;
+        }
+      } catch (error) {
+        console.log('Stats not available:', error);
+        // Set default values
+        document.getElementById('heroTotalComplaints').textContent = '0';
+        document.getElementById('heroResolvedCount').textContent = '0';
+        document.getElementById('heroPendingCount').textContent = '0';
+        document.getElementById('heroInProgressCount').textContent = '0';
+      }
+    }
+
+    // Load stats on page load
+    loadStats();
+  </script>
+</body>
+</html>

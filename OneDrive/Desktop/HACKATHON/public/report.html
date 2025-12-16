@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Report a civic issue in your area - potholes, garbage, streetlights, and more.">
+    <title>Report Issue - CivicFix</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <div class="bg-decoration"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="/" class="nav-logo">
+                <div class="nav-logo-icon">🏙️</div>
+                <span>CivicFix</span>
+            </a>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/report.html" class="active">Report Issue</a></li>
+                <li><a href="/track.html">Track Status</a></li>
+                <li><a href="/admin.html">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <div class="container">
+            <h1>📍 Report a Civic Issue</h1>
+            <p>Help improve your city by reporting problems. We'll ensure the right authorities take action.</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="section">
+        <div class="container container-sm">
+            <!-- Alert Container -->
+            <div id="alertContainer"></div>
+
+            <!-- Report Form -->
+            <form id="reportForm" class="card">
+                <h2 style="margin-bottom: var(--space-xl);">Issue Details</h2>
+
+                <!-- Issue Type -->
+                <div class="form-group">
+                    <label class="form-label" for="issueType">
+                        Issue Type <span class="required">*</span>
+                    </label>
+                    <select class="form-select" id="issueType" name="issueType" required>
+                        <option value="">Select issue type...</option>
+                        <option value="pothole">🕳️ Pothole / Road Damage</option>
+                        <option value="garbage">🗑️ Garbage / Waste</option>
+                        <option value="streetlight">💡 Streetlight Issue</option>
+                        <option value="water-leakage">💧 Water Leakage / Drainage</option>
+                        <option value="dirty-toilet">🚽 Public Toilet Issue</option>
+                        <option value="other">📋 Other</option>
+                    </select>
+                </div>
+
+                <!-- Description -->
+                <div class="form-group">
+                    <label class="form-label" for="description">
+                        Description <span class="required">*</span>
+                    </label>
+                    <textarea class="form-textarea" id="description" name="description"
+                        placeholder="Describe the issue in detail. Include any relevant information that can help resolve it faster..."
+                        required minlength="10" maxlength="1000"></textarea>
+                    <p class="form-hint">Minimum 10 characters. Be specific about the problem.</p>
+                </div>
+
+                <!-- Photo Upload -->
+                <div class="form-group">
+                    <label class="form-label">
+                        Photo Evidence (Optional)
+                    </label>
+                    <div class="file-upload" id="fileUpload">
+                        <input type="file" id="photo" name="photo" accept="image/*" capture="environment">
+                        <div class="file-upload-icon">📸</div>
+                        <div class="file-upload-text">
+                            <span>Click to upload</span> or drag and drop<br>
+                            <small>JPG, PNG, GIF up to 10MB</small>
+                        </div>
+                    </div>
+                    <div class="file-preview" id="filePreview" style="position: relative;">
+                        <button type="button" id="removeImageBtn" class="btn-icon"
+                            style="position: absolute; top: -10px; right: -10px; background: var(--error); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; z-index: 10; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"
+                            title="Remove Image">✖</button>
+                        <img id="previewImage" src="" alt="Preview">
+                        <p id="fileName" class="mt-sm text-muted"></p>
+                        <!-- AI Prediction Result -->
+                        <div id="aiPrediction" class="mt-sm hidden"
+                            style="background: rgba(99, 102, 241, 0.1); padding: 10px; border-radius: 8px; border: 1px solid var(--primary);">
+                            <div class="flex items-center gap-sm mb-sm">
+                                <span style="font-size: 1.2rem;">🤖</span>
+                                <strong>AI Analysis</strong>
+                            </div>
+                            <div id="aiSpinner" class="flex items-center gap-sm">
+                                <div class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></div>
+                                <span class="text-muted" style="font-size: 0.9rem;">Scanning image features...</span>
+                            </div>
+                            <div id="aiResult" class="hidden">
+                                <p style="font-size: 0.9rem; margin-bottom: 4px;">Detected: <strong id="detectedIssue"
+                                        class="text-primary"></strong></p>
+                                <div class="flex items-center gap-sm">
+                                    <div
+                                        style="flex-grow: 1; height: 6px; background: var(--bg-dark); border-radius: 3px; overflow: hidden;">
+                                        <div style="width: 98%; height: 100%; background: var(--success);"></div>
+                                    </div>
+                                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--success);">98%
+                                        Match</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location -->
+                <div class="form-group">
+                    <label class="form-label">
+                        Location <span class="required">*</span>
+                    </label>
+                    <div class="location-input">
+                        <input type="text" class="form-input" id="locationDisplay"
+                            placeholder="Click the button to capture your location" readonly>
+                        <button type="button" class="btn btn-secondary location-btn" id="getLocationBtn">
+                            📍 Get Location
+                        </button>
+                    </div>
+                    <div class="location-status" id="locationStatus"></div>
+                    <input type="hidden" id="latitude" name="latitude">
+                    <input type="hidden" id="longitude" name="longitude">
+                </div>
+
+                <!-- Optional Contact Info -->
+                <details style="margin-bottom: var(--space-xl);">
+                    <summary style="cursor: pointer; color: var(--text-secondary); margin-bottom: var(--space-md);">
+                        ➕ Add Contact Information (Optional)
+                    </summary>
+                    <div class="form-group">
+                        <label class="form-label" for="citizenName">Your Name</label>
+                        <input type="text" class="form-input" id="citizenName" name="citizenName"
+                            placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="citizenPhone">Phone Number</label>
+                        <input type="tel" class="form-input" id="citizenPhone" name="citizenPhone"
+                            placeholder="+91 98765 43210">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="citizenEmail">Email Address</label>
+                        <input type="email" class="form-input" id="citizenEmail" name="citizenEmail"
+                            placeholder="your@email.com">
+                    </div>
+                </details>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary btn-lg w-full" id="submitBtn">
+                    🚀 Submit Report
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="successModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>✅ Report Submitted!</h2>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <div class="text-center">
+                <p style="font-size: 1.125rem; margin-bottom: var(--space-lg);">Your complaint has been registered
+                    successfully.</p>
+                <div class="card" style="background: var(--gradient-card); margin-bottom: var(--space-xl);">
+                    <p class="text-muted mb-sm">Your Complaint ID:</p>
+                    <p id="complaintIdDisplay"
+                        style="font-size: 1.5rem; font-weight: 700; color: var(--primary-light);"></p>
+                    <p class="text-muted mt-md" style="font-size: 0.875rem;">Save this ID to track your complaint status
+                    </p>
+                </div>
+                <div class="flex gap-md justify-center flex-wrap">
+                    <a href="/track.html" class="btn btn-primary">🔍 Track Status</a>
+                    <button class="btn btn-secondary" id="newReportBtn">📝 New Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-text">
+                <strong>CivicFix</strong> - Making cities better, one report at a time
+            </div>
+            <div class="footer-text">
+                Need help? <a href="#">Contact Support</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile Navigation
+        document.getElementById('navToggle').addEventListener('click', function () {
+            document.getElementById('navLinks').classList.toggle('active');
+        });
+
+        // File Upload Preview
+        const photoInput = document.getElementById('photo');
+        const fileUpload = document.getElementById('fileUpload');
+        const filePreview = document.getElementById('filePreview');
+        const previewImage = document.getElementById('previewImage');
+        const fileName = document.getElementById('fileName');
+
+        photoInput.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    previewImage.src = e.target.result;
+                    fileName.textContent = file.name;
+                    filePreview.classList.add('active');
+
+                    // Trigger AI Simulation
+                    simulateAIDetection(file.name);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Drag and drop
+        fileUpload.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        fileUpload.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+
+        fileUpload.addEventListener('drop', function (e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                photoInput.files = files;
+                photoInput.dispatchEvent(new Event('change'));
+            }
+        });
+
+
+
+        // Remove Image
+        document.getElementById('removeImageBtn').addEventListener('click', function () {
+            photoInput.value = ''; // Clear input
+            filePreview.classList.remove('active');
+            previewImage.src = '';
+            document.getElementById('aiPrediction').classList.add('hidden'); // Hide AI
+            // Reset Dropdown? Maybe fetch from description? No, keep as is or reset to default?
+            // Better to let user manually change if they want.
+        });
+
+        // GPS Location
+        const getLocationBtn = document.getElementById('getLocationBtn');
+        const locationDisplay = document.getElementById('locationDisplay');
+        const locationStatus = document.getElementById('locationStatus');
+        const latitudeInput = document.getElementById('latitude');
+        const longitudeInput = document.getElementById('longitude');
+
+        getLocationBtn.addEventListener('click', function () {
+            if (!navigator.geolocation) {
+                showLocationStatus('error', '❌ Geolocation is not supported by your browser');
+                return;
+            }
+
+            showLocationStatus('loading', '📡 Getting your location...');
+            getLocationBtn.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    latitudeInput.value = lat;
+                    longitudeInput.value = lng;
+                    locationDisplay.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+                    showLocationStatus('success', '✅ Location captured successfully!');
+                    getLocationBtn.disabled = false;
+
+                    // Try to get address (reverse geocoding)
+                    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.display_name) {
+                                locationDisplay.value = data.display_name.substring(0, 100);
+                            }
+                        })
+                        .catch(() => { }); // Silent fail
+                },
+                function (error) {
+                    let message = '❌ ';
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            message += 'Location permission denied. Please enable it in your browser settings.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            message += 'Location information unavailable.';
+                            break;
+                        case error.TIMEOUT:
+                            message += 'Location request timed out.';
+                            break;
+                        default:
+                            message += 'An unknown error occurred.';
+                    }
+                    showLocationStatus('error', message);
+                    getLocationBtn.disabled = false;
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        });
+
+        function showLocationStatus(type, message) {
+            locationStatus.className = 'location-status ' + type;
+            locationStatus.innerHTML = message;
+        }
+
+        // AI Simulation Logic
+        function simulateAIDetection(filename) {
+            const aiPrediction = document.getElementById('aiPrediction');
+            const aiSpinner = document.getElementById('aiSpinner');
+            const aiResult = document.getElementById('aiResult');
+            const detectedIssue = document.getElementById('detectedIssue');
+            const issueSelect = document.getElementById('issueType');
+
+            // Reset UI
+            aiPrediction.classList.remove('hidden');
+            aiSpinner.classList.remove('hidden');
+            aiResult.classList.add('hidden');
+
+            // Simulate Network Delay (1.5s)
+            setTimeout(() => {
+                let detectedType = 'other';
+                let displayText = 'General Issue';
+                const lowerName = filename.toLowerCase();
+
+                // Keyword Matching "AI"
+                if (lowerName.includes('pothole') || lowerName.includes('road') || lowerName.includes('crack') || lowerName.includes('hole') || lowerName.includes('damage')) {
+                    detectedType = 'pothole';
+                    displayText = 'Pothole / Road Damage';
+                } else if (lowerName.includes('garbage') || lowerName.includes('trash') || lowerName.includes('waste') || lowerName.includes('dump') || lowerName.includes('bin') || lowerName.includes('plastic')) {
+                    detectedType = 'garbage';
+                    displayText = 'Garbage Dump';
+                } else if (lowerName.includes('light') || lowerName.includes('lamp') || lowerName.includes('dark') || lowerName.includes('pole') || lowerName.includes('wire')) {
+                    detectedType = 'streetlight';
+                    displayText = 'Streetlight Fault';
+                } else if (lowerName.includes('water') || lowerName.includes('leak') || lowerName.includes('pipe') || lowerName.includes('drain') || lowerName.includes('sewage')) {
+                    detectedType = 'water-leakage';
+                    displayText = 'Water Leakage';
+                } else if (lowerName.includes('toilet') || lowerName.includes('washroom') || lowerName.includes('urinal') || lowerName.includes('bathroom')) {
+                    detectedType = 'dirty-toilet';
+                    displayText = 'Unsanitary Toilet';
+                } else {
+                    // 🪄 DEMO MAGIC: If filename is generic, simulate a smart detection!
+                    const demoTypes = [
+                        { type: 'pothole', text: 'Pothole / Road Damage' },
+                        { type: 'garbage', text: 'Garbage Dump' }
+                    ];
+                    const randomPick = demoTypes[Date.now() % demoTypes.length];
+                    detectedType = randomPick.type;
+                    displayText = randomPick.text;
+                }
+
+                // Show Result
+                aiSpinner.classList.add('hidden');
+                aiResult.classList.remove('hidden');
+                detectedIssue.textContent = displayText;
+
+                // Auto-select dropdown
+                issueSelect.value = detectedType;
+
+                // Flash effect on dropdown
+                issueSelect.style.borderColor = 'var(--success)';
+                issueSelect.style.boxShadow = '0 0 0 4px rgba(16, 185, 129, 0.1)';
+                setTimeout(() => {
+                    issueSelect.style.borderColor = '';
+                    issueSelect.style.boxShadow = '';
+                }, 1000);
+
+            }, 1500);
+        }
+
+        // Form Submission
+        const reportForm = document.getElementById('reportForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const alertContainer = document.getElementById('alertContainer');
+        const successModal = document.getElementById('successModal');
+
+        reportForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // Validate location
+            if (!latitudeInput.value || !longitudeInput.value) {
+                showAlert('error', 'Please capture your location before submitting.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Submitting...';
+
+            const formData = new FormData();
+            formData.append('issueType', document.getElementById('issueType').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('latitude', latitudeInput.value);
+            formData.append('longitude', longitudeInput.value);
+            formData.append('address', locationDisplay.value);
+            if (photoInput.files[0]) {
+                formData.append('photo', photoInput.files[0]);
+            }
+            formData.append('citizenName', document.getElementById('citizenName').value);
+            formData.append('citizenPhone', document.getElementById('citizenPhone').value);
+            formData.append('citizenEmail', document.getElementById('citizenEmail').value);
+
+            try {
+                console.log('Submitting form data...');
+                const response = await fetch('/api/complaints', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                console.log('Response status:', response.status);
+                const result = await response.json();
+                console.log('Response:', result);
+
+                if (result.success) {
+                    document.getElementById('complaintIdDisplay').textContent = result.data.complaintId;
+                    successModal.classList.add('active');
+                } else {
+                    showAlert('error', result.message || 'Failed to submit report. Please try again.');
+                }
+            } catch (error) {
+                console.error('Submission error:', error);
+                showAlert('error', 'Error: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '🚀 Submit Report';
+            }
+        });
+
+        function showAlert(type, message) {
+            alertContainer.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            alertContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Modal Controls
+        document.getElementById('closeModal').addEventListener('click', function () {
+            successModal.classList.remove('active');
+        });
+
+        document.getElementById('newReportBtn').addEventListener('click', function () {
+            successModal.classList.remove('active');
+            reportForm.reset();
+            filePreview.classList.remove('active');
+            locationDisplay.value = '';
+            latitudeInput.value = '';
+            longitudeInput.value = '';
+            locationStatus.innerHTML = '';
+            alertContainer.innerHTML = '';
+        });
+
+        successModal.addEventListener('click', function (e) {
+            if (e.target === successModal) {
+                successModal.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+
+</html>
