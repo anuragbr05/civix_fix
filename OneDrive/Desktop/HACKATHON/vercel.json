@@ -4,49 +4,9 @@
         {
             "src": "server.js",
             "use": "@vercel/node"
-        },
-        {
-            "src": "public/**",
-            "use": "@vercel/static"
         }
     ],
     "routes": [
-        {
-            "src": "/api/(.*)",
-            "dest": "/server.js"
-        },
-        {
-            "src": "/uploads/(.*)",
-            "dest": "/public/uploads/$1"
-        },
-        {
-            "src": "/(.*\\.html)",
-            "dest": "/public/$1"
-        },
-        {
-            "src": "/(.*\\.css)",
-            "dest": "/public/$1"
-        },
-        {
-            "src": "/(.*\\.js)",
-            "dest": "/public/$1"
-        },
-        {
-            "src": "/(.*\\.png)",
-            "dest": "/public/$1"
-        },
-        {
-            "src": "/(.*\\.jpg)",
-            "dest": "/public/$1"
-        },
-        {
-            "src": "/(.*\\.ico)",
-            "dest": "/public/$1"
-        },
-        {
-            "src": "/",
-            "dest": "/public/index.html"
-        },
         {
             "src": "/(.*)",
             "dest": "/server.js"
